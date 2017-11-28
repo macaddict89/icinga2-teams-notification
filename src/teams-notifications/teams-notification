@@ -1,0 +1,50 @@
+#!/usr/bin/python
+import requests
+import json
+import argparse
+
+uri = "WEBHOOK URI FROM MICROSOT TEAMS"
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--title", required=True, help="Title for the notification")
+parser.add_argument("--text", required=True, help="Text for the notification")
+parser.add_argument("-c", "--color", default="ffffff", help="Color theme for the notification (hex color without sharp)")
+parser.add_argument("-S", "--system", help="Name of the broken system")
+parser.add_argument("-s", "--service", help="Name of the broken service")
+parser.add_argument("-i", "--status", help="Status text")
+parser.add_argument("-t", "--time", help="Time of status change")
+args = parser.parse_args()
+
+headers = {'content-type': 'application/json'}
+
+def addFact(data, key, value):
+  data['sections'][1]['facts'].append({ 'name' : key, 'value': value});
+
+data = {
+  '@context': 'http://schema.org/extensions',
+  '@type': 'MessageCard',
+  'title': args.title,
+  'text': ' ',
+  'themeColor': args.color,
+  'sections': [
+    {
+      'activityText': args.text
+    },
+    {
+      'facts': []
+    }
+  ]
+}
+
+if(args.system):
+  addFact(data, 'System', args.system)
+if(args.service):
+  addFact(data, 'Service', args.service)
+if(args.status):
+  addFact(data, 'Status', args.status)
+if(args.time):
+  addFact(data, 'Timestamp', args.time)
+
+jsonData =  json.dumps(data)
+
+print requests.post(uri, data=jsonData, headers=headers)
